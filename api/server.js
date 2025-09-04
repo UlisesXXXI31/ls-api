@@ -192,10 +192,17 @@ app.get('/api/users', async (req, res) => {
 app.get('/api/progress/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const progressHistory = await Progress.find({ userId: userId }).sort({ date: 1 });
+
+    // --- ¡CAMBIO AQUÍ! ---
+    // Buscamos en el campo 'user' que es como se llama en tu modelo Progress.
+    const progressHistory = await Progress.find({ user: userId }).sort({ completedAt: 1 });
+    // He cambiado también .sort({ date: 1 }) por .sort({ completedAt: 1 })
+    // para que coincida con el nombre de campo en tu modelo.
+
     if (!progressHistory || progressHistory.length === 0) {
-      return res.status(404).json({ message: 'No se encontró historial de progreso.' });
+      return res.status(404).json({ message: 'No se encontró historial de progreso para este usuario.' });
     }
+
     res.status(200).json({ progress: progressHistory });
   } catch (error) {
     console.error('Error al obtener el progreso del usuario:', error);
@@ -206,6 +213,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
 
 
 
