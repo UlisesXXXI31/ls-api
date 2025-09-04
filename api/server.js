@@ -102,20 +102,37 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
+// En api/server.js
+
 app.post('/api/progress', async (req, res) => {
-  try {
-    const { userId, taskName, score, completed } = req.body;
-    const newProgress = new Progress({
-      user: userId,
-      taskName,
-      score,
-      completed
-    });
-    await newProgress.save();
-    res.status(201).json({ message: 'Progreso guardado con éxito' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    console.log("--- Petición POST a /api/progress recibida ---"); // LOG 1
+    
+    try {
+        console.log("Datos recibidos en el body:", req.body); // LOG 2
+
+        const { user, lessonName, taskName, score, completed } = req.body;
+
+        const newProgress = new Progress({
+            user: user,
+            lessonName: lessonName,
+            taskName: taskName,
+            score: score,
+            completed: completed
+        });
+
+        console.log("Intentando guardar este documento:", newProgress); // LOG 3
+        
+        await newProgress.save();
+        
+        console.log("¡Documento guardado con éxito!"); // LOG 4
+
+        res.status(201).json({ message: 'Progreso guardado con éxito' });
+
+    } catch (error) {
+        // Este es el log más importante si algo falla
+        console.error("### ERROR DENTRO DE LA RUTA /api/progress ###:", error); // LOG 5
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.get('/api/progress/students', async (req, res) => {
@@ -213,6 +230,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
 
 
 
