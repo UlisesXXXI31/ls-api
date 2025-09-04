@@ -7,7 +7,7 @@ const progressSchema = new Schema({
     ref: 'User',
     required: true
   },
-  LessonName: {
+  lessonName: {
     type: String,
     required: true
   },
