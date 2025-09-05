@@ -1,5 +1,7 @@
+// backend/models/progress.js (VERSIÓN ESTÁNDAR)
+
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const Schema = mongoose.Schema;
 
 const progressSchema = new Schema({
   user: {
@@ -7,7 +9,7 @@ const progressSchema = new Schema({
     ref: 'User',
     required: true
   },
-  lessonName: {
+  lessonName: { // <-- 'n' minúscula
     type: String,
     required: true
   },
@@ -29,6 +31,5 @@ const progressSchema = new Schema({
   }
 });
 
-const Progress = mongoose.model('Progress', progressSchema);
-
-module.exports = Progress;
+// Usa el patrón singleton para evitar errores en Vercel
+module.exports = mongoose.models.Progress || mongoose.model('Progress', progressSchema);
