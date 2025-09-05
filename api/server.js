@@ -53,7 +53,8 @@ app.get('/api/seed', async (req, res) => {
     // 3. (Opcional) Crear un registro de progreso para ese usuario
     const testProgress = new Progress({
       user: testUser._id,
-      lessonName: 'Lección de Prueba',
+      LessonName: 'Lección de Prueba',
+      taskName: 'Prueba iniciual A1',
       score: 100,
       completed: true
     });
@@ -102,35 +103,51 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
-// En backend/api/server.js
+// REEMPLAZA TU RUTA DE PROGRESO CON ESTA VERSIÓN ROBUSTA
 
 app.post('/api/progress', async (req, res) => {
+    console.log("--- Petición POST a /api/progress recibida ---");
+    
     try {
-        // Asegúrate de que estás extrayendo todos los campos que envías
         const { user, lessonName, taskName, score, completed } = req.body;
+        console.log("Datos recibidos:", { user, lessonName, taskName, score, completed });
 
-        // Validar que los datos necesarios están presentes
         if (!user || !lessonName || !taskName || score === undefined) {
+            console.log("Validación fallida: Faltan datos.");
             return res.status(400).json({ message: "Faltan datos para guardar el progreso." });
         }
 
-        const newProgress = new Progress({
-            user,
-            lessonName,
-            taskName,
-            score,
-            completed
-        });
-        
-        await newProgress.save();
-        res.status(201).json({ message: 'Progreso guardado con éxito' });
+        const filter = { user, lessonName, taskName };
+        const updateData = { $inc: { score: score }, $set: { completedAt: new Date() } };
+        if (completed) {
+            updateData.$set.completed = true;
+        }
+
+        console.log("Intentando findOneAndUpdate con el filtro:", filter);
+        console.log("Y los datos de actualización:", updateData);
+
+        const updatedProgress = await Progress.findOneAndUpdate(
+            filter,
+            updateData,
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        // --- ¡VERIFICACIÓN CRUCIAL! ---
+        if (updatedProgress) {
+            console.log("¡Éxito! Documento guardado/actualizado:", updatedProgress);
+            res.status(200).json({ message: 'Progreso guardado/actualizado con éxito', progress: updatedProgress });
+        } else {
+            // Esto solo ocurriría si 'upsert: true' fallara, lo cual es muy raro.
+            console.error("ERROR: findOneAndUpdate no devolvió un documento.");
+            throw new Error("No se pudo guardar el progreso en la base de datos.");
+        }
+        // ---------------------------------
+
     } catch (error) {
-        // Este log es crucial y aparecerá en Vercel
-        console.error("ERROR AL GUARDAR PROGRESO:", error); 
+        console.error("### ERROR CATASTRÓFICO EN LA RUTA /api/progress:", error);
         res.status(500).json({ error: error.message });
     }
 });
-
 
 app.get('/api/progress/students', async (req, res) => {
   try {
@@ -203,21 +220,22 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// En backend/api/server.js
+
 app.get('/api/progress/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // --- ¡CAMBIO AQUÍ! ---
-    // Buscamos en el campo 'user' que es como se llama en tu modelo Progress.
+    // --- ¡CORRECCIÓN AQUÍ! ---
+    // Buscamos en el campo 'user' y ordenamos por 'completedAt'.
     const progressHistory = await Progress.find({ user: userId }).sort({ completedAt: 1 });
-    // He cambiado también .sort({ date: 1 }) por .sort({ completedAt: 1 })
-    // para que coincida con el nombre de campo en tu modelo.
 
     if (!progressHistory || progressHistory.length === 0) {
       return res.status(404).json({ message: 'No se encontró historial de progreso para este usuario.' });
     }
-
+    
     res.status(200).json({ progress: progressHistory });
+
   } catch (error) {
     console.error('Error al obtener el progreso del usuario:', error);
     res.status(500).json({ message: 'Error interno del servidor.' });
@@ -227,6 +245,11 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
+
+
+
+
 
 
 
