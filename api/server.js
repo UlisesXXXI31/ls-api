@@ -45,7 +45,7 @@ app.get('/api/seed', async (req, res) => {
         name: 'Profesor de Prueba',
         email: 'prof.prueba@seed.com', // Un email único para evitar errores
         password: hashedPassword,
-        role: 'teacher'
+        role: 'profesor'
     });
     await testUser.save();
     console.log("Usuario de prueba creado con éxito.");
@@ -245,6 +245,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
 
 
 
