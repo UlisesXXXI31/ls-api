@@ -26,8 +26,8 @@ mongoose.connect(uri)
   });
 
 // --- 5. Importación de Modelos ---
-const User = require('./models/users');
-const Progress = require('./models/progress');
+const User = require('../models/users');
+const Progress = require('../models/progress');
 
 // --- 6. Rutas de la API (Públicas) ---
 app.get('/', (req, res) => {
@@ -155,4 +155,5 @@ app.get('/api/progress/:userId', verifyToken, async (req, res) => {
 
 // --- 9. Export de la App ---
 module.exports = app;
+
 
