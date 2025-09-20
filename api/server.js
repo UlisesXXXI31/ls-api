@@ -1,4 +1,4 @@
-// VERSIÓN COMPLETA Y CORREGIDA DE api/server.js
+
 
 // --- 1. Imports ---
 const express = require('express');
@@ -157,3 +157,4 @@ app.get('/api/progress/:userId', verifyToken, async (req, res) => {
 
 // --- 9. Export de la App ---
 module.exports = app;
+
