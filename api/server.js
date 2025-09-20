@@ -182,7 +182,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Credenciales inválidas' });
     }
-    if (user.role !== 'profesor' && user.role !== 'alumno') {
+    if (user.role !== 'teacher' && user.role !== 'alumno') {
       return res.status(403).json({ message: 'Acceso denegado' });
     }
     res.status(200).json({ message: 'Inicio de sesión exitoso', user: { id: user._id, name: user.name, email: user.email, role: user.role } });
@@ -245,6 +245,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
 
 
 
