@@ -171,8 +171,7 @@ app.get('/api/progress/students', async (req, res) => {
   }
 });
 
-// Agrega esta línea al principio de tu archivo server.js si no la tienes
-const jwt = require('jsonwebtoken');
+
 
 // --- NUEVO CÓDIGO: MIDDLEWARE DE AUTENTICACIÓN ---
 // Esto verificará el token en todas las rutas que lo uses
@@ -279,3 +278,4 @@ app.get('/api/progress/:userId', verifyToken, async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
