@@ -1,11 +1,11 @@
-
+// VERSIÓN COMPLETA Y CORREGIDA DE api/server.js
 
 // --- 1. Imports ---
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken'); // ¡Asegúrate de que solo está esta línea!
+const jwt = require('jsonwebtoken'); 
 
 // --- 2. Creación de la App ---
 const app = express();
@@ -20,11 +20,14 @@ app.use(express.json());
 const uri = process.env.MONGODB_URI;
 mongoose.connect(uri)
   .then(() => console.log('Conexión exitosa a MongoDB Atlas'))
-  .catch(err => console.error('Error de conexión a MongoDB Atlas:', err));
+  .catch(err => {
+    console.error('Error de conexión a MongoDB Atlas:', err);
+    process.exit(1); // Sale de la aplicación si la conexión falla
+  });
 
 // --- 5. Importación de Modelos ---
-const User = require('../models/user');
-const Progress = require('../models/progress');
+const User = require('./models/user');
+const Progress = require('./models/progress');
 
 // --- 6. Rutas de la API (Públicas) ---
 app.get('/', (req, res) => {
@@ -75,8 +78,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- 7. Middleware de Autenticación (¡NUEVO!) ---
-// Verifica el token en cada petición para las rutas protegidas
+// --- 7. Middleware de Autenticación ---
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -90,10 +92,8 @@ const verifyToken = (req, res, next) => {
 };
 
 // --- 8. Rutas de la API (Protegidas) ---
-// Ahora, todas estas rutas usan 'verifyToken' como segundo parámetro
 app.get('/api/users', verifyToken, async (req, res) => {
   try {
-    // Solo permitimos a los profesores ver la lista de alumnos
     if (req.user.role !== 'profesor') {
       return res.status(403).json({ message: 'Acceso denegado. Solo profesores pueden ver esta lista.' });
     }
@@ -111,7 +111,6 @@ app.get('/api/users', verifyToken, async (req, res) => {
 
 app.get('/api/progress/students', verifyToken, async (req, res) => {
   try {
-    // Protege esta ruta de la misma manera
     if (req.user.role !== 'profesor') {
       return res.status(403).json({ message: 'Acceso denegado. Solo profesores pueden ver el progreso.' });
     }
@@ -139,7 +138,6 @@ app.get('/api/progress/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     
-    // Asegúrate de que solo el dueño del progreso o un profesor pueda acceder
     if (req.user.role !== 'profesor' && req.user.userId !== userId) {
       return res.status(403).json({ message: 'Acceso denegado. No tienes permisos para ver este progreso.' });
     }
@@ -157,4 +155,3 @@ app.get('/api/progress/:userId', verifyToken, async (req, res) => {
 
 // --- 9. Export de la App ---
 module.exports = app;
-
