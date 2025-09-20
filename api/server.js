@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // --- 2. Creación de la App ---
 const app = express();
@@ -170,27 +171,45 @@ app.get('/api/progress/students', async (req, res) => {
   }
 });
 
+// Agrega esta línea al principio de tu archivo server.js si no la tienes
+const jwt = require('jsonwebtoken');
+
+// ...
+
 // Ruta de autenticación (login)
 app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Credenciales inválidas' });
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Credenciales inválidas' });
-    }
-    if (user.role !== 'profesor' && user.role !== 'alumno') {
-      return res.status(403).json({ message: 'Acceso denegado' });
-    }
-    res.status(200).json({ message: 'Inicio de sesión exitoso', user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-  } catch (error) {
-    res.status(500).json({ error: 'Error del servidor. Inténtalo de nuevo.' });
-  }
-});
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
 
+        if (!user) {
+            return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+        
+        // Esta lógica de roles ya la tenías y es correcta
+        if (user.role !== 'profesor' && user.role !== 'alumno') {
+            return res.status(403).json({ message: 'Acceso denegado. Rol no permitido.' });
+        }
+        
+        // --- ¡¡LÓGICA CRUCIAL: GENERAR Y ENVIAR EL TOKEN!! ---
+        const payload = { userId: user._id, role: user.role };
+        const token = jwt.sign(payload, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '1h' });
+
+        res.status(200).json({ 
+            message: 'Inicio de sesión exitoso',
+            user: { id: user._id, name: user.name, email: user.email, role: user.role },
+            token: token // <-- ¡Aquí es donde se envía el token!
+        });
+        
+    } catch (error) {
+        res.status(500).json({ error: 'Error del servidor. Inténtalo de nuevo.' });
+    }
+});
 app.get('/api/users/by-email', async (req, res) => {
   try {
     const { email } = req.query;
@@ -245,6 +264,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 // --- 7. Export de la App ---
 module.exports = app;
+
 
 
 
